@@ -1,8 +1,6 @@
-obj-m := debugfs_example1.o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-WARN_FLAGS += -Wall
+obj-m += main.o
 
-.PHONY: default
-defualt:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
