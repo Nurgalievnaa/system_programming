@@ -4,20 +4,20 @@
 #include <linux/init.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
-#include <linux/jiffies.h>
+#include <linux/jiffies.h> //extern unsigned long volatile jiffies;
 #include <linux/semaphore.h>
 
+// The GPL license is required for the module to load.
+// Without it, insmod reports unknown symbols in the module.
 MODULE_LICENSE("GPL");
 
 #define USERNAME "akmaral-Aspire-E5-511"
 #define LEN 10
 
-struct mutex lock;
+struct mutex lock;               /*mutex is just int in memory with lock and unlock operations*/
 struct dentry *root=0;
 int ret;
 char my_user1_buf[PAGE_SIZE];
-
-
 
 
 
@@ -28,7 +28,7 @@ static ssize_t my_user1_read(struct file *f, __user char *buffer,
 	size_t read_num = length < (PAGE_SIZE - *offset) ? 
 			  length : (PAGE_SIZE - *offset);
 
-	ret = mutex_lock_interruptible(&lock);
+	ret = mutex_lock_interruptible(&lock); ///acquire the mutex, interruptible
 	if (ret)
 		return -1;
 
@@ -80,8 +80,14 @@ static struct file_operations my_user1_fops = {
   .write = my_user1_write,
 };
 
+
+
+// This is called when the module loads.
 int __init hello_init(void)
 {
+
+ // Create directory `/sys/kernel/debug/fortytwo`.
+ // If parent is null, then directory is created in root of debugfs.
 	root = debugfs_create_dir("fortytwo", 0);
     if (!root) {
         // Abort module load.
@@ -96,9 +102,12 @@ int __init hello_init(void)
 
 }
 
+// This is called when the module is removed.
 void __exit hello_exit(void)
 {
 	printk(KERN_INFO "Cleaning up module.\n");
+// We must manually remove the debugfs entries we created. They are not
+    // automatically removed upon module removal.
 	debugfs_remove_recursive(root);
 }
 
